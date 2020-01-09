@@ -77,13 +77,38 @@ public class OfflineModelActivity extends BascActivity implements View.OnClickLi
         String scanValue = et_code.getText().toString().trim().replaceAll("\n", "");
 
         if (TextUtils.isEmpty(scanValue)) {
-            scanError(tv_qrcode_warning, R.string.null_scan);
+            //scanError(tv_qrcode_warning, R.string.null_scan);
             et_code.setText("");
             return;
         }
 
         if (!checkAES128CBC(scanValue)) {
             scanError(tv_qrcode_warning, R.string.scan_value_error);
+            final AlertDialog.Builder normalDialog =
+                    new AlertDialog.Builder(mContext);
+            normalDialog.setMessage("扫描内容异常！");
+            normalDialog.setNegativeButton("确定",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+            normalDialog.setPositiveButton("取消",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+            // 显示
+            normalDialog.show();
+            tv_expoid.setText("");
+            tv_name.setText("");
+            tv_code.setText("");
+            tv_company.setText("");
+            tv_role.setText("");
+            tv_number.setText("");
+            tv_time.setText("");
+            qrcode = "";
             playSound();
             et_code.setText("");
             return;
