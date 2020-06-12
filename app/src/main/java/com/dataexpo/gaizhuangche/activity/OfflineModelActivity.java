@@ -11,6 +11,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -99,6 +100,7 @@ public class OfflineModelActivity extends BascActivity implements View.OnClickLi
                         public void onClick(DialogInterface dialog, int which) {
                         }
                     });
+            //Toast.makeText(this, "扫描内容异常！", Toast.LENGTH_SHORT).show();
             // 显示
             normalDialog.show();
             tv_expoid.setText("");

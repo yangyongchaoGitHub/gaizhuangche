@@ -39,6 +39,7 @@ public class ScanRecordActivity extends BascActivity implements View.OnClickList
     private TextView tv_total;
     private TextView tv_total_today;
     private List<Code> codes;
+    private List<Code> codesToday;
     private CodeRecordAdapter dateAdapter;
     private RecyclerView recyclerView;
 
@@ -53,8 +54,9 @@ public class ScanRecordActivity extends BascActivity implements View.OnClickList
 
     private void initData() {
         codes = DBUtils.getInstance().listAll();
+        codesToday = DBUtils.getInstance().listAllToday();
         tv_total.setText(String.valueOf(codes.size()));
-        tv_total_today.setText(String.valueOf(codes.size()));
+        tv_total_today.setText(String.valueOf(codesToday.size()));
         dateAdapter = new CodeRecordAdapter();
         recyclerView.setAdapter(dateAdapter);
 

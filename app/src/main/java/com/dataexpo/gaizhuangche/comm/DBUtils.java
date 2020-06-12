@@ -10,6 +10,7 @@ import android.util.Log;
 import com.dataexpo.gaizhuangche.model.Code;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class DBUtils {
     private final String TAG = DBUtils.class.getSimpleName();
@@ -63,6 +64,28 @@ public class DBUtils {
     public ArrayList<Code> listAll() {
         ArrayList<Code> list = new ArrayList<>();
         Cursor cursor = db.query(dbname, null, null, null, null, null, null);
+        while (cursor.moveToNext()) {
+            int id = cursor.getInt(cursor.getColumnIndex("id"));
+            String eucode = cursor.getString(cursor.getColumnIndex("eucode"));
+            String printtime = cursor.getString(cursor.getColumnIndex("printtime"));
+            list.add(new Code(id, eucode, printtime));
+
+            Log.i(TAG, "selectis=========" + id + "==" + eucode + "==" + printtime);
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return list;
+    }
+
+    /**
+     * 查询当日数据
+     * 返回List
+     */
+    public ArrayList<Code> listAllToday() {
+        String date = Utils.formatTime(new Date().getTime(), "yyyy-MM-dd");
+        ArrayList<Code> list = new ArrayList<>();
+        Cursor cursor = db.query(dbname, null, "printtime like ?",new String[]{"%" + date + "%"},null, null, null);
         while (cursor.moveToNext()) {
             int id = cursor.getInt(cursor.getColumnIndex("id"));
             String eucode = cursor.getString(cursor.getColumnIndex("eucode"));
