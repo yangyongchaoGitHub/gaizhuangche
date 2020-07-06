@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -11,14 +12,18 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
 import com.dataexpo.gaizhuangche.BascActivity;
 import com.dataexpo.gaizhuangche.R;
 import com.dataexpo.gaizhuangche.comm.DBUtils;
+import com.dataexpo.gaizhuangche.comm.FileUtils;
 import com.dataexpo.gaizhuangche.comm.Utils;
+import com.dataexpo.gaizhuangche.model.TestResult;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -83,6 +88,22 @@ public class OfflineModelActivity extends BascActivity implements View.OnClickLi
             return;
         }
 
+        //设置通码，当扫描结果是通码时，直接通行
+        if ("YW000000".equals(scanValue)) {
+            et_code.setText("");
+            tv_expoid.setText("");
+            tv_code.setText("");
+            tv_company.setText("");
+            tv_role.setText("");
+            tv_number.setText("");
+            long dateTime = new Date().getTime();// - 60*60*24*1000;
+            String date = Utils.formatTime(dateTime, "yyyy-MM-dd_HH:mm:ss");
+            tv_time.setText(date);
+            DBUtils.getInstance().insertData("通码", date);
+            tv_name.setText("通码，请开闸");
+            return;
+        }
+
         if (!checkAES128CBC(scanValue)) {
             scanError(tv_qrcode_warning, R.string.scan_value_error);
             final AlertDialog.Builder normalDialog =
@@ -133,10 +154,10 @@ public class OfflineModelActivity extends BascActivity implements View.OnClickLi
         tv_role.setText(values[3]);
         tv_number.setText(values[5]);
 
+        offlineCheckIn(values[1], values[2], values[3], values[4], values[0]);
+
         values = null;
         et_code.setText("");
-
-        offlineCheckIn();
     }
 
     private boolean checkAES128CBC(String str) {
@@ -219,7 +240,7 @@ public class OfflineModelActivity extends BascActivity implements View.OnClickLi
                     new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            offlineCheckIn();
+                            //offlineCheckIn();
                             //Log.i(TAG, "delete codesize :" + userInfo.data.euPrintCount);
                         }
                     });
@@ -240,14 +261,19 @@ public class OfflineModelActivity extends BascActivity implements View.OnClickLi
             // 显示
             normalDialog.show();
         } else {
-            offlineCheckIn();
+            //offlineCheckIn();
         }
     }
 
-    private void offlineCheckIn() {
+    private void offlineCheckIn(String name, String company, String role, String code, String expoid) {
+
+//        MyAsyncTask task  = new MyAsyncTask();
+//        task.execute(123);
+
         long dateTime = new Date().getTime();
         String date = Utils.formatTime(dateTime, "yyyy-MM-dd_HH:mm:ss");
         DBUtils.getInstance().insertData(qrcode, date);
+        FileUtils.saveRecord(name, date, company, role, code, expoid);
         tv_last.setText(qrcode_last);
 
         qrcode_last = qrcode;
@@ -268,5 +294,34 @@ public class OfflineModelActivity extends BascActivity implements View.OnClickLi
 
     private void scanError(TextView v, int msgId) {
         v.setText(msgId);
+    }
+
+    public class MyAsyncTask extends AsyncTask<Integer, String, String> {
+        @Override
+        protected String doInBackground(Integer... integers) {
+            RestTemplate template = new RestTemplate();
+            //template.getForEntity("http://192.168.1.27:8090/authtool/getBase64?code=123456789&name=45645788956", TestResult.class);
+            ResponseEntity<TestResult> result = template.getForEntity("http://192.168.1.27:8090/authtool/getBase64?code=123456789&name=45645788956", TestResult.class);
+
+            return  result.getBody().getDate();
+        }
+        /**
+         * 这里的String参数对应AsyncTask中的第三个参数（也就是接收doInBackground的返回值）
+         * 在doInBackground方法执行结束之后在运行，并且运行在UI线程当中 可以对UI空间进行设置
+         */
+        @Override
+        protected void onPostExecute(String result) {
+            //btn.setText("线程结束" + result);
+            Log.i(TAG, "exec end");
+        }
+        //该方法运行在UI线程当中,并且运行在UI线程当中 可以对UI空间进行设置
+        @Override
+        protected void onPreExecute() {
+            //btn.setText("开始执行异步线程");
+        }
+        @Override
+        protected void onProgressUpdate(String... values) {
+
+        }
     }
 }
